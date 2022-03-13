@@ -4,6 +4,10 @@
 #include <iostream>
 #include <thread>
 
+#include "json/single_include/nlohmann/json.hpp"
+
+using Json = nlohmann::json;
+
 int main(int argc, char **argv)
 {
     if (argc < 3) {
@@ -18,9 +22,24 @@ int main(int argc, char **argv)
 
     SolarEdgeRequest ser(url, token);
 
-    while (true) {
-        std::cout << "Req" << ser.request() << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    for (int i = 0; i < 3; i++) {
+        std::string jsonString = ser.request();
+        //std::cout << ser.request() << std::endl;
+
+        Json json = Json::parse(jsonString)["siteCurrentPowerFlow"];
+
+        int updateRefreshRate = json.value("updateRefreshRate", 3);
+
+        std::string storageStatus = json["STORAGE"].value("status", "unknown");
+        std::cout << "STORAGE.status: " << storageStatus << std::endl;
+
+        double storageCurrentPower = json["STORAGE"].value("currentPower", 0.0);
+        std::cout << "STORAGE.currentPower: " << storageCurrentPower << std::endl;
+
+        int storageChargeLevel = json["STORAGE"].value("chargeLevel", 0);
+        std::cout << "STORAGE.chargeLevel: " << storageChargeLevel << std::endl;
+
+        std::this_thread::sleep_for(std::chrono::seconds(updateRefreshRate));
     }
 
 }

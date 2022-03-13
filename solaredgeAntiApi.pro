@@ -12,4 +12,9 @@ SOURCES += \
 
 HEADERS += \
     httprequest.h \
+    json/single_include/nlohmann/json.hpp \
     solaredgerequest.h
+
+# Install rules for binary file
+target.path = /home/pi
+!isEmpty(target.path): INSTALLS += target
