@@ -1,16 +1,18 @@
 TEMPLATE = app
-CONFIG += console c++11
+CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
 LIBS += -lcurl
 
 SOURCES += \
+        daikincontroller.cpp \
         httprequest.cpp \
         main.cpp \
         solaredgerequest.cpp
 
 HEADERS += \
+    daikincontroller.h \
     httprequest.h \
     json/single_include/nlohmann/json.hpp \
     solaredgerequest.h

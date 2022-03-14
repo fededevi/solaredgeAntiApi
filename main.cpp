@@ -1,4 +1,5 @@
 #include "solaredgerequest.h"
+#include "daikincontroller.h"
 
 #include <chrono>
 #include <iostream>
@@ -23,14 +24,16 @@ int main(int argc, char **argv)
     std::string token(argv[2]);
 
     SolarEdgeRequest ser(url, token);
+    DaikinController ctl1("192.168.1.61/");
+    DaikinController ctl2("192.168.1.62/");
 
-    for (int i = 0; i < 4; i++) {
+    while (true) {
+
         std::cout << std::endl << "Request status... " << std::endl;
         std::string jsonString = ser.request();
-        //std::cout << ser.request() << std::endl;
+        std::cout << ser.request() << std::endl;
 
         Json json = Json::parse(jsonString)["siteCurrentPowerFlow"];
-
 
         int updateRefreshRate = json.value("updateRefreshRate", 3);
         std::cout << "Using refresh rate of " << updateRefreshRate << " seconds"<< std::endl;
@@ -44,7 +47,22 @@ int main(int argc, char **argv)
         int storageChargeLevel = json["STORAGE"].value("chargeLevel", 0);
         std::cout << "STORAGE.chargeLevel: " << storageChargeLevel << std::endl;
 
-        std::this_thread::sleep_for(std::chrono::seconds(updateRefreshRate));
+        double usedPower = 0;
+        if ( storageStatus != "Discharging" ) {
+            std::cout << "Turn on" << std::endl;
+            ctl1.setParams(1, ControlMode::AUTO, 26, FanMode::AUTO, WingMode::BOTH, 40);
+            ctl2.setParams(1, ControlMode::AUTO, 26, FanMode::AUTO, WingMode::BOTH, 40);
+            usedPower = 1.5;
+        } else {
+            std::cout << "Turn off" << std::endl;
+            ctl1.setParams(0);
+            ctl2.setParams(0);
+            usedPower = 0;
+        }
+        /*
+        ctl.setParams();*/
+
+        std::this_thread::sleep_for(std::chrono::seconds(10));
     }
 
 }
