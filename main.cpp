@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <map>
 
 #include "json/single_include/nlohmann/json.hpp"
 
@@ -15,6 +16,7 @@ int main(int argc, char **argv)
                      "They look like this:\n" \
                      "URL: https://monitoring.solaredge.com/solaredge-apigw/api/site/215645/currentPowerFlow.json\n" \
                      "TOKEN: ZmFiaW9kZXZpZ2lsaUB5YWhvby5pdDozNzk0NjcwMsteOTAyOjBiNGY0MWQ1NGJlYzUwYmIxZAFjZGQ1NzcwZWM3OWZj" << std::endl;
+        return 1;
     }
 
     std::string url(argv[1]);
@@ -22,13 +24,16 @@ int main(int argc, char **argv)
 
     SolarEdgeRequest ser(url, token);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
+        std::cout << std::endl << "Request status... " << std::endl;
         std::string jsonString = ser.request();
         //std::cout << ser.request() << std::endl;
 
         Json json = Json::parse(jsonString)["siteCurrentPowerFlow"];
 
+
         int updateRefreshRate = json.value("updateRefreshRate", 3);
+        std::cout << "Using refresh rate of " << updateRefreshRate << " seconds"<< std::endl;
 
         std::string storageStatus = json["STORAGE"].value("status", "unknown");
         std::cout << "STORAGE.status: " << storageStatus << std::endl;
