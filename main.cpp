@@ -1,12 +1,11 @@
 #include "solaredgerequest.h"
 #include "daikincontroller.h"
-#include "loadinterface.h"
 #include "daikinload.h"
+#include "loadinterface.h"
 
 #include <chrono>
 #include <iostream>
 #include <thread>
-#include <map>
 
 #include "json.hpp"
 
@@ -42,19 +41,17 @@ int main(int argc, char **argv)
         double loadCurrentPower = json["LOAD"].value("currentPower", 0.0);
         double pvCurrentPower = json["PV"].value("currentPower", 0.0);
         double availablePower = pvCurrentPower - loadCurrentPower;
-        std::cout << "Net power: " << availablePower << ". ";
+        std::cout << "NETPWR:" << availablePower << std::endl;
 
         level = std::max(std::min(level, static_cast<int>(loads.size())-1),0);
 
         LoadInterface & li = *loads[level];
         if ( li.getPowerThreshold() < availablePower ) {
             level++;
-            std::cout << "Enabling load " << level << std::endl;
             li.enable();
         }
 
         if ( availablePower < 0 ) {
-            std::cout << "Disabling load " << level << std::endl;
             li.disable();
             level--;
         }
