@@ -30,7 +30,7 @@ std::string HttpRequest::request()
     std::string finalurl = url + "?" + urlParams;
 
     curl_easy_setopt(curl, option, 1L);
-    curl_easy_setopt(curl, CURLOPT_URL, (url+urlParams).c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, (finalurl).c_str());
     //curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_ANY);
     //curl_easy_setopt(curl, CURLOPT_, (long)CURLAUTH_ANY);
 

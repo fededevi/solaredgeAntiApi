@@ -32,7 +32,7 @@ class DaikinController
 public:
     DaikinController( const std::string & host );
 
-    void setParams(bool pow = 1,
+    std::string setParams(bool pow = 1,
                    ControlMode mode = ControlMode::AUTO,
                    uint stemp = 25,
                    FanMode frate=FanMode::AUTO,

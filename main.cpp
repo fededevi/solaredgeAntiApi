@@ -24,8 +24,8 @@ int main(int argc, char **argv)
     std::string token(argv[2]);
 
     SolarEdgeRequest ser(url, token);
-    DaikinController ctl1("192.168.1.61/");
-    DaikinController ctl2("192.168.1.62/");
+    DaikinController ctl1("http://192.168.1.61/");
+    DaikinController ctl2("http://192.168.1.62/");
 
     while (true) {
 
@@ -47,22 +47,30 @@ int main(int argc, char **argv)
         int storageChargeLevel = json["STORAGE"].value("chargeLevel", 0);
         std::cout << "STORAGE.chargeLevel: " << storageChargeLevel << std::endl;
 
-        double usedPower = 0;
-        if ( storageStatus != "Discharging" ) {
-            std::cout << "Turn on" << std::endl;
-            ctl1.setParams(1, ControlMode::AUTO, 26, FanMode::AUTO, WingMode::BOTH, 40);
-            ctl2.setParams(1, ControlMode::AUTO, 26, FanMode::AUTO, WingMode::BOTH, 40);
-            usedPower = 1.5;
-        } else {
-            std::cout << "Turn off" << std::endl;
-            ctl1.setParams(0);
-            ctl2.setParams(0);
-            usedPower = 0;
-        }
-        /*
-        ctl.setParams();*/
+        double loadCurrentPower = json["LOAD"].value("currentPower", 0);
+        std::cout << "LOAD.currentPower: " << loadCurrentPower << std::endl;
 
-        std::this_thread::sleep_for(std::chrono::seconds(10));
+        double pvCurrentPower = json["PV"].value("currentPower", 0);
+        std::cout << "PV.currentPower: " << pvCurrentPower << std::endl;
+
+        double usedPower = 0;
+        double availableEnergy = pvCurrentPower - loadCurrentPower + usedPower;
+
+
+
+        if ( storageStatus == "Discharging" || storageChargeLevel < 10) {
+            std::cout << "Turn off" << std::endl;
+            std::cout << ctl1.setParams(0) << std::endl;
+            std::cout << ctl2.setParams(0) << std::endl;
+            usedPower = 0;
+        } else if ( availableEnergy > 0.5 ) {
+            std::cout << "Turn on" << std::endl;
+            std::cout << ctl1.setParams(1, ControlMode::AUTO, 28, FanMode::AUTO, WingMode::BOTH, 40) << std::endl;
+            std::cout << ctl2.setParams(1, ControlMode::AUTO, 28, FanMode::AUTO, WingMode::BOTH, 40) << std::endl;
+            usedPower = 1.5;
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(240));
     }
 
 }
