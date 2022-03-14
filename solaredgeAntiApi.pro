@@ -7,14 +7,18 @@ LIBS += -lcurl
 
 SOURCES += \
         daikincontroller.cpp \
+        daikinload.cpp \
         httprequest.cpp \
+        loadinterface.cpp \
         main.cpp \
         solaredgerequest.cpp
 
 HEADERS += \
     daikincontroller.h \
+    daikinload.h \
     httprequest.h \
     json.hpp \
+    loadinterface.h \
     solaredgerequest.h
 
 # Install rules for binary file
