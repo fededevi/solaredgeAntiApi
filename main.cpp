@@ -6,7 +6,7 @@
 #include <thread>
 #include <map>
 
-#include "json/single_include/nlohmann/json.hpp"
+#include "json.hpp"
 
 using Json = nlohmann::json;
 
@@ -27,8 +27,8 @@ int main(int argc, char **argv)
     DaikinController ctl1("http://192.168.1.61/");
     DaikinController ctl2("http://192.168.1.62/");
 
+    int level = 0;
     while (true) {
-
         std::cout << std::endl << "Request status... " << std::endl;
         std::string jsonString = ser.request();
         std::cout << ser.request() << std::endl;
@@ -47,27 +47,44 @@ int main(int argc, char **argv)
         int storageChargeLevel = json["STORAGE"].value("chargeLevel", 0);
         std::cout << "STORAGE.chargeLevel: " << storageChargeLevel << std::endl;
 
-        double loadCurrentPower = json["LOAD"].value("currentPower", 0);
+        double loadCurrentPower = json["LOAD"].value("currentPower", 0.0);
         std::cout << "LOAD.currentPower: " << loadCurrentPower << std::endl;
 
-        double pvCurrentPower = json["PV"].value("currentPower", 0);
+        double pvCurrentPower = json["PV"].value("currentPower", 0.0);
         std::cout << "PV.currentPower: " << pvCurrentPower << std::endl;
 
-        double usedPower = 0;
+        double usedPower = level * 750;
         double availableEnergy = pvCurrentPower - loadCurrentPower + usedPower;
-
-
+        std::cout << "availableEnergy: " << availableEnergy << std::endl;
 
         if ( storageStatus == "Discharging" || storageChargeLevel < 10) {
-            std::cout << "Turn off" << std::endl;
+            std::cout << "Decrease Level" << std::endl;
+            level--;
+        } else if ( availableEnergy > 0.5 ) {
+            std::cout << "Increase Level" << std::endl;
+            level++;
+        }
+
+        level = std::max(std::min(level, 3), 0);
+        std::cout << "Level " <<  level <<std::endl;
+
+        switch (level) {
+        case 0:
             std::cout << ctl1.setParams(0) << std::endl;
             std::cout << ctl2.setParams(0) << std::endl;
-            usedPower = 0;
-        } else if ( availableEnergy > 0.5 ) {
-            std::cout << "Turn on" << std::endl;
+            break;
+        case 1:
+            std::cout << ctl1.setParams(1, ControlMode::AUTO, 28, FanMode::AUTO, WingMode::BOTH, 40) << std::endl;
+            std::cout << ctl2.setParams(0) << std::endl;
+            break;
+        case 2:
             std::cout << ctl1.setParams(1, ControlMode::AUTO, 28, FanMode::AUTO, WingMode::BOTH, 40) << std::endl;
             std::cout << ctl2.setParams(1, ControlMode::AUTO, 28, FanMode::AUTO, WingMode::BOTH, 40) << std::endl;
-            usedPower = 1.5;
+            break;
+        case 3:
+            std::cout << ctl1.setParams(1, ControlMode::AUTO, 30, FanMode::LEVEL_5, WingMode::BOTH, 40) << std::endl;
+            std::cout << ctl2.setParams(1, ControlMode::AUTO, 30, FanMode::LEVEL_5, WingMode::BOTH, 40) << std::endl;
+            break;
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(240));

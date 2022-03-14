@@ -14,7 +14,7 @@ SOURCES += \
 HEADERS += \
     daikincontroller.h \
     httprequest.h \
-    json/single_include/nlohmann/json.hpp \
+    json.hpp \
     solaredgerequest.h
 
 # Install rules for binary file
