@@ -13,13 +13,12 @@ public:
     };
 
     double get(){
+        const std::lock_guard<std::mutex> lock(mutex);
         if (sum == 0) return 0;
-        mutex.lock();
+
         double val = sum / (double)count;
         count = 0;
         sum = 0;
-        mutex.unlock();
-
         return val;
     };
 private:

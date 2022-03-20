@@ -65,7 +65,7 @@ int main(int argc, char **argv)
                              availablePower << "\t" <<
                              gridCurrentPower;
             }  catch ( ... ) { }
-            std::this_thread::sleep_for(std::chrono::seconds(3));
+            std::this_thread::sleep_for(std::chrono::seconds(30));
         }
     });
 
@@ -73,25 +73,20 @@ int main(int argc, char **argv)
     int level = 0;
     while (!exit) {
         std::this_thread::sleep_for(std::chrono::seconds(240));
-
         double averageNetPower = netPowerAverage.get();
-        //std::cout << "AVGPWR,,"  << averageNetPower << "," << std::endl;
 
         LoadInterface & li = *loads[level];
         if ( li.getPowerThreshold() < averageNetPower ) {
             level++;
-            std::cout << "\t" << "LVL+";
             li.enable();
         }
 
         if ( averageNetPower < 0 ) {
             li.disable();
-            std::cout << "\t" << "LVL-";
             level--;
         }
 
         level = std::max(std::min(level, static_cast<int>(loads.size())-1),0); // clamp level
-        std::cout << "\t" << level;
 
 
     }
