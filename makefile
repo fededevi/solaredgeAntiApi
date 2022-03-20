@@ -3,7 +3,7 @@ TARGET ?= solarEdgeAntiApi
 SRCS := $(shell find *.cpp)
 OBJS := $(addsuffix .o, $(basename $(SRCS)))
 
-LIBS += -lcurl
+LIBS += -lcurl -lpthread
 
 
 $(TARGET): $(OBJS)
