@@ -15,7 +15,6 @@ std::string DaikinController::setParams(bool pow, ControlMode mode, uint stemp, 
                                            {"mode", std::to_string(static_cast<int>(mode))},
                                            {"stemp", std::to_string(stemp)},
                                            {"f_rate", fanmodeString},
-                                           {"pow", std::to_string(pow)},
                                            {"f_dir", std::to_string(static_cast<int>(f_dir))},
                                            {"shum", std::to_string(shum)}
                                        });

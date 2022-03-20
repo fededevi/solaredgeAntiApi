@@ -3,9 +3,10 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
-LIBS += -lcurl
+LIBS += -lcurl -lpthread
 
 SOURCES += \
+        averager.cpp \
         daikincontroller.cpp \
         daikinload.cpp \
         httprequest.cpp \
@@ -14,6 +15,7 @@ SOURCES += \
         solaredgerequest.cpp
 
 HEADERS += \
+    averager.h \
     daikincontroller.h \
     daikinload.h \
     httprequest.h \

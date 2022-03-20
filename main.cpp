@@ -1,4 +1,5 @@
 #include "solaredgerequest.h"
+#include "averager.h"
 #include "daikincontroller.h"
 #include "daikinload.h"
 #include "loadinterface.h"
@@ -21,42 +22,78 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    std::string url(argv[1]);
-    std::string token(argv[2]);
+    std::string url(argv[1]);       //Solaredge monitoring api address
+    std::string token(argv[2]);     //Solaredge login token (not the api key but the login token)
 
-    SolarEdgeRequest ser(url, token);
 
     std::vector<LoadInterface *> loads{
                 new DummyLoad(),
-                new DaikinLoad("http://192.168.1.61/"),
-                new DaikinLoad("http://192.168.1.231/"),
+                new DaikinLoad("http://192.168.1.61/"), //Daikin split local ip
+                new DaikinLoad("http://192.168.1.231/"), //Daikin split local ip
                 new DummyLoad()
     };
 
-    int level = 0;
-    while (true) {
-        std::string jsonString = ser.request();
-        Json json = Json::parse(jsonString)["siteCurrentPowerFlow"];
-        std::string storageStatus = json["STORAGE"].value("status", "unknown");
-        double loadCurrentPower = json["LOAD"].value("currentPower", 0.0);
-        double pvCurrentPower = json["PV"].value("currentPower", 0.0);
-        double availablePower = pvCurrentPower - loadCurrentPower;
-        std::cout << "NETPWR:" << availablePower << std::endl;
+    for (auto & load : loads) load->disable(); //Disable all loads
 
-        level = std::max(std::min(level, static_cast<int>(loads.size())-1),0);
+    Averager netPowerAverage;
+    SolarEdgeRequest ser(url, token);
+    bool exit= false;
+
+    std::thread solarEdgeThread([&](){
+        std::cout << "TIME" << "\t\t" <<
+                     "LOAD" << "\t" <<
+                     "PV" << "\t" <<
+                     "STRG" << "\t" <<
+                     "AVLB" << "\t" <<
+                     "GRID";
+        while(!exit) {
+            std::string jsonString = ser.request();
+            try {
+                Json json = Json::parse(jsonString)["siteCurrentPowerFlow"];
+                //std::cout << jsonString << " " << std::flush;
+                double loadCurrentPower = json["LOAD"].value("currentPower", 0.0);
+                double pvCurrentPower = json["PV"].value("currentPower", 0.0);
+                double storageCurrentPower = json["STORAGE"].value("currentPower", 0.0);
+                double gridCurrentPower = json["GRID"].value("currentPower", 0.0);
+                double availablePower = pvCurrentPower - loadCurrentPower;
+                netPowerAverage.add(availablePower);
+                std::cout << std::endl <<
+                             time(nullptr) << "\t\t" <<
+                             loadCurrentPower << "\t" <<
+                             pvCurrentPower << "\t" <<
+                             storageCurrentPower << "\t" <<
+                             availablePower << "\t" <<
+                             gridCurrentPower;
+            }  catch ( ... ) { }
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+        }
+    });
+
+
+    int level = 0;
+    while (!exit) {
+        std::this_thread::sleep_for(std::chrono::seconds(240));
+
+        double averageNetPower = netPowerAverage.get();
+        //std::cout << "AVGPWR,,"  << averageNetPower << "," << std::endl;
 
         LoadInterface & li = *loads[level];
-        if ( li.getPowerThreshold() < availablePower ) {
+        if ( li.getPowerThreshold() < averageNetPower ) {
             level++;
+            std::cout << "\t" << "LVL+";
             li.enable();
         }
 
-        if ( availablePower < 0 ) {
+        if ( averageNetPower < 0 ) {
             li.disable();
+            std::cout << "\t" << "LVL-";
             level--;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(240));
+        level = std::max(std::min(level, static_cast<int>(loads.size())-1),0); // clamp level
+        std::cout << "\t" << level;
+
+
     }
 
 }
