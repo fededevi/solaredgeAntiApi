@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     bool exit= false;
 
     std::thread solarEdgeThread([&](){
-        std::cout << "TIME" << "\t\t" <<
+        std::cout << "   TIME   " << "\t\t" <<
                      "LOAD" << "\t" <<
                      "PV" << "\t" <<
                      "STRG" << "\t" <<
