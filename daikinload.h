@@ -11,7 +11,7 @@ public:
 
     void enable() {
         std::cout << "Turning on Daikin - " << daikinController.host << std::endl;
-        daikinController.setParams(1, ControlMode::AUTO, 25, FanMode::LEVEL_5, WingMode::VERTICAL, 40);
+        daikinController.setParams(1, ControlMode::AUTO, 22, FanMode::LEVEL_5, WingMode::VERTICAL, 40);
     };
 
     void disable() {
